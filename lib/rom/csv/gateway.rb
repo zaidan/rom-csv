@@ -84,7 +84,7 @@ module ROM
       #
       # @api private
       def self.load_file(path, options = {})
-        ::CSV.table(path, options).by_row!.map(&:to_hash)
+        ::CSV.table(path, **options).by_row!.map(&:to_hash)
       end
 
       # @param [Hash] sources The hashmap containing data loaded from files
