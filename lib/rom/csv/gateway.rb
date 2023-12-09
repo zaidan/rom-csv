@@ -51,7 +51,7 @@ module ROM
           load_files(path, options)
         else
           {
-            source_name(path) => {
+            source_name(path, options) => {
               data: load_file(path, options),
               path: path
             }
@@ -64,15 +64,15 @@ module ROM
       # @api private
       def self.load_files(path, options = {})
         Dir["#{path}/*.csv"].each_with_object({}) do |file, h|
-          h[source_name(file)] = {
+          h[source_name(file, options)] = {
             data: load_file(file, options),
             path: file
           }
         end
       end
 
-      def self.source_name(filename)
-        File.basename(filename, '.*')
+      def self.source_name(filename, options)
+        options[:alias] || File.basename(filename, '.*')
       end
 
       # Load csv file
@@ -84,7 +84,8 @@ module ROM
       #
       # @api private
       def self.load_file(path, options = {})
-        ::CSV.table(path, **options).by_row!.map(&:to_hash)
+        csv_options = options.reject { |key| key == :alias }
+        ::CSV.table(path, **csv_options).by_row!.map(&:to_hash)
       end
 
       # @param [Hash] sources The hashmap containing data loaded from files
