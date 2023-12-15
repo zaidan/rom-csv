@@ -47,7 +47,7 @@ module ROM
       #
       # @api private
       def self.load_from(path, options = {})
-        if File.directory?(path)
+        if path.is_a?(String) && File.directory?(path)
           load_files(path, options)
         else
           {
@@ -72,6 +72,10 @@ module ROM
       end
 
       def self.source_name(filename, options)
+        if !filename.is_a?(String) && !options[:alias]
+          raise ArgumentError, "#{self.class}.new requires option :alias when"\
+            'reading from IO!'
+        end
         options[:alias] || File.basename(filename, '.*')
       end
 
@@ -85,7 +89,15 @@ module ROM
       # @api private
       def self.load_file(path, options = {})
         csv_options = options.reject { |key| key == :alias }
-        ::CSV.table(path, **csv_options).by_row!.map(&:to_hash)
+        if !path.is_a?(String)
+          ::CSV.parse(path, **{
+            headers: true,
+            converters: :numeric,
+            header_converters: :symbol
+          }.merge(csv_options))
+        else
+          ::CSV.table(path, **csv_options)
+        end.by_row!.map(&:to_hash)
       end
 
       # @param [Hash] sources The hashmap containing data loaded from files
